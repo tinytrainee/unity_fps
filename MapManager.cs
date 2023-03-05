@@ -7,6 +7,11 @@ public class MapManager : MonoBehaviour
     bool reached;
     public Vector3 randomWP{get; private set;}
 
+    public float nextWPRangeMax = 20f;
+    bool hasSpecifiedCentor = false;
+    
+    Vector3 specifiedCentor = Vector3.zero;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -24,7 +29,7 @@ public class MapManager : MonoBehaviour
     {
         resultPos = center;
         bool res = false;
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 10; i++)
         {
             Vector3 randomPoint = center + Random.insideUnitSphere * range;
             UnityEngine.AI.NavMeshHit hit;
@@ -33,6 +38,7 @@ public class MapManager : MonoBehaviour
                 resultPos = hit.position;
                 center = resultPos;
                 res = true;
+                break;
             }
         }
         return res;
@@ -47,12 +53,16 @@ public class MapManager : MonoBehaviour
     {
         // reached check
         bool reached = false;
-        if ((transform.position - randomWP).magnitude < 5){
+        if ((transform.position - randomWP).magnitude < 1){
             reached = true;
             Debug.Log("Reached WP");
         }
         if (reached){
-            var res = GetRandomPosition(transform.position, 20, out Vector3 resultPos);
+            Vector3 nextWPCentor = transform.position;
+            if (hasSpecifiedCentor){
+                nextWPCentor = specifiedCentor;
+            }
+            var res = GetRandomPosition(nextWPCentor, nextWPRangeMax, out Vector3 resultPos);
             if (res){
                 // success for generate new WP
                 reached = false;
@@ -60,5 +70,17 @@ public class MapManager : MonoBehaviour
                 Debug.Log(string.Format("New Waypoint : [{0}, {1}, {2}", randomWP[0], randomWP[1], randomWP[2]));
             }
         }
+    }
+
+    public void SetCentor(Vector3 centor, float range = 0)
+    {
+        specifiedCentor = centor;
+        nextWPRangeMax = range;
+        hasSpecifiedCentor = true;
+    }
+
+    public void ClearCentor(){
+        nextWPRangeMax = 20;
+        hasSpecifiedCentor = false;
     }
 }

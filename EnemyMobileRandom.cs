@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Unity.FPS.AI
 {
-    [RequireComponent(typeof(EnemyController))]
+    [RequireComponent(typeof(EnemyControllerRandom))]
     public class EnemyMobileRandom : MonoBehaviour
     {
         public enum AIState
@@ -29,7 +29,7 @@ namespace Unity.FPS.AI
         public MinMaxFloat PitchDistortionMovementSpeed;
 
         public AIState AiState { get; private set; }
-        EnemyController m_EnemyController;
+        EnemyControllerRandom m_EnemyController;
         AudioSource m_AudioSource;
 
         MapManager m_MapManager;
@@ -41,14 +41,14 @@ namespace Unity.FPS.AI
 
         void Start()
         {
-            m_EnemyController = GetComponent<EnemyController>();
-            DebugUtility.HandleErrorIfNullGetComponent<EnemyController, EnemyMobile>(m_EnemyController, this,
+            m_EnemyController = GetComponent<EnemyControllerRandom>();
+            DebugUtility.HandleErrorIfNullGetComponent<EnemyControllerRandom, EnemyMobile>(m_EnemyController, this,
                 gameObject);
 
             m_EnemyController.onAttack += OnAttack;
             m_EnemyController.onDetectedTarget += OnDetectedTarget;
             m_EnemyController.onLostTarget += OnLostTarget;
-            m_EnemyController.SetPathDestinationToClosestNode();
+            // m_EnemyController.SetPathDestinationToClosestNode();
             m_EnemyController.onDamaged += OnDamaged;
 
             // Start patrolling
@@ -88,7 +88,8 @@ namespace Unity.FPS.AI
                     if (m_EnemyController.IsSeeingTarget && m_EnemyController.IsTargetInAttackRange)
                     {
                         AiState = AIState.Attack;
-                        m_EnemyController.SetNavDestination(transform.position);
+                        // m_EnemyController.SetNavDestination(m_MapManager.randomWP);
+                        Debug.Log("to Attack");
                     }
 
                     break;
@@ -97,6 +98,8 @@ namespace Unity.FPS.AI
                     if (!m_EnemyController.IsTargetInAttackRange)
                     {
                         AiState = AIState.Follow;
+                        Debug.Log("to Follow");
+                        m_MapManager.ClearCentor();
                     }
 
                     break;
@@ -113,22 +116,14 @@ namespace Unity.FPS.AI
                     m_EnemyController.SetNavDestination(m_MapManager.randomWP);
                     break;
                 case AIState.Follow:
-                    m_EnemyController.SetNavDestination(m_EnemyController.KnownDetectedTarget.transform.position);
+                    m_MapManager.SetCentor(m_EnemyController.KnownDetectedTarget.transform.position, 3);
+                    m_EnemyController.SetNavDestination(m_MapManager.randomWP);
                     m_EnemyController.OrientTowards(m_EnemyController.KnownDetectedTarget.transform.position);
                     m_EnemyController.OrientWeaponsTowards(m_EnemyController.KnownDetectedTarget.transform.position);
                     break;
                 case AIState.Attack:
-                    if (Vector3.Distance(m_EnemyController.KnownDetectedTarget.transform.position,
-                            m_EnemyController.DetectionModule.DetectionSourcePoint.position)
-                        >= (AttackStopDistanceRatio * m_EnemyController.DetectionModule.AttackRange))
-                    {
-                        m_EnemyController.SetNavDestination(m_EnemyController.KnownDetectedTarget.transform.position);
-                    }
-                    else
-                    {
-                        m_EnemyController.SetNavDestination(transform.position);
-                    }
-
+                    m_MapManager.SetCentor(transform.position, 3);
+                    m_EnemyController.SetNavDestination(m_MapManager.randomWP);
                     m_EnemyController.OrientTowards(m_EnemyController.KnownDetectedTarget.transform.position);
                     m_EnemyController.TryAtack(m_EnemyController.KnownDetectedTarget.transform.position);
                     break;
