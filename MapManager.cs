@@ -55,7 +55,7 @@ public class MapManager : MonoBehaviour
         bool reached = false;
         if ((transform.position - randomWP).magnitude < 1){
             reached = true;
-            Debug.Log("Reached WP");
+            // Debug.Log("Reached WP");
         }
         if (reached){
             Vector3 nextWPCentor = transform.position;
@@ -67,7 +67,7 @@ public class MapManager : MonoBehaviour
                 // success for generate new WP
                 reached = false;
                 randomWP = resultPos;
-                Debug.Log(string.Format("New Waypoint : [{0}, {1}, {2}", randomWP[0], randomWP[1], randomWP[2]));
+                // Debug.Log(string.Format("New Waypoint : [{0}, {1}, {2}", randomWP[0], randomWP[1], randomWP[2]));
             }
         }
     }

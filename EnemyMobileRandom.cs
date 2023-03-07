@@ -1,5 +1,6 @@
 ﻿using Unity.FPS.Game;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Unity.FPS.AI
 {
@@ -39,6 +40,19 @@ namespace Unity.FPS.AI
         const string k_AnimAlertedParameter = "Alerted";
         const string k_AnimOnDamagedParameter = "OnDamaged";
 
+        List<GameObject> m_ConnectedFriends = new List<GameObject>();
+
+        public float AngularSpeedOfRaycast = 1f;
+        public float RangeOfRaycast = 10f;
+        float raycastAngleForSearchFriend;
+
+        Actor m_actor;
+        Collider[] m_SelfColliders;
+
+        GameObject RayViewer;
+
+        GameObject Body;
+
         void Start()
         {
             m_EnemyController = GetComponent<EnemyControllerRandom>();
@@ -61,6 +75,11 @@ namespace Unity.FPS.AI
             m_AudioSource.Play();
             m_MapManager = GetComponent<MapManager>();
             // DebugUtility.HandleErrorIfNullGetComponent<MapManager, EnemyMobile>(m_MapManager, this, gameObject);
+            raycastAngleForSearchFriend = 0f;
+            m_actor = GetComponent<Actor>();
+            m_SelfColliders = GetComponentsInChildren<Collider>();
+            RayViewer = gameObject.transform.Find("RayViewer").gameObject;
+            Body = gameObject.transform.Find("HitBox").gameObject;
         }
 
         void Update()
@@ -76,6 +95,8 @@ namespace Unity.FPS.AI
             // changing the pitch of the movement sound depending on the movement speed
             m_AudioSource.pitch = Mathf.Lerp(PitchDistortionMovementSpeed.Min, PitchDistortionMovementSpeed.Max,
                 moveSpeed / m_EnemyController.NavMeshAgent.speed);
+
+            SearchFriendsByRaycast();
         }
 
         void UpdateAiStateTransitions()
@@ -127,6 +148,30 @@ namespace Unity.FPS.AI
                     m_EnemyController.OrientTowards(m_EnemyController.KnownDetectedTarget.transform.position);
                     m_EnemyController.TryAtack(m_EnemyController.KnownDetectedTarget.transform.position);
                     break;
+            }
+        }
+
+        void SearchFriendsByRaycast()
+        {
+            raycastAngleForSearchFriend += AngularSpeedOfRaycast * Time.deltaTime;
+            if (raycastAngleForSearchFriend > Mathf.PI){
+                raycastAngleForSearchFriend -= 2 * Mathf.PI;
+            }
+            if (raycastAngleForSearchFriend < -Mathf.PI){
+                raycastAngleForSearchFriend += 2 * Mathf.PI;
+            }
+            Vector3 ray = Quaternion.AngleAxis(raycastAngleForSearchFriend * 180 / Mathf.PI, Vector3.up) * Vector3.forward * RangeOfRaycast;
+            RayViewer.transform.position = Body.transform.position + ray;
+            RaycastHit[] hits = Physics.RaycastAll(Body.transform.position, 
+                                        ray,
+                                        RangeOfRaycast,  
+                                        -1, 
+                                        QueryTriggerInteraction.Ignore);
+            foreach (var hit in hits){
+                Actor hitActor = hit.collider.GetComponentInParent<Actor>();
+                if (hitActor != null && hitActor.Affiliation == m_actor.Affiliation){
+                    Debug.Log(string.Format("Find Friends {0}", hitActor.transform.root.gameObject.name));
+                }
             }
         }
 
