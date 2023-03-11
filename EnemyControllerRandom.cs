@@ -117,6 +117,7 @@ namespace Unity.FPS.AI
         WeaponController m_CurrentWeapon;
         WeaponController[] m_Weapons;
         NavigationModule m_NavigationModule;
+        ConnectManager m_ConnectManager;
 
         void Start()
         {
@@ -199,6 +200,9 @@ namespace Unity.FPS.AI
                 m_EyeRendererData.Renderer.SetPropertyBlock(m_EyeColorMaterialPropertyBlock,
                     m_EyeRendererData.MaterialIndex);
             }
+
+            m_ConnectManager = FindObjectOfType<ConnectManager>();
+            m_ConnectManager.AddAgent(gameObject, m_Actor.Affiliation);
         }
 
         void Update()
@@ -372,6 +376,7 @@ namespace Unity.FPS.AI
             {
                 Instantiate(LootPrefab, transform.position, Quaternion.identity);
             }
+            m_ConnectManager.RemoveAgent(gameObject, m_Actor.Affiliation);
 
             // this will call the OnDestroy function
             Destroy(gameObject, DeathDuration);
