@@ -118,6 +118,7 @@ namespace Unity.FPS.AI
         WeaponController[] m_Weapons;
         NavigationModule m_NavigationModule;
         ConnectManager m_ConnectManager;
+        bool firstTime;
 
         void Start()
         {
@@ -201,12 +202,16 @@ namespace Unity.FPS.AI
                     m_EyeRendererData.MaterialIndex);
             }
 
-            m_ConnectManager = FindObjectOfType<ConnectManager>();
-            m_ConnectManager.AddAgent(gameObject, m_Actor.Affiliation);
+            firstTime = true;
         }
 
         void Update()
         {
+            if (firstTime){
+                firstTime = false;
+                m_ConnectManager = FindObjectOfType<ConnectManager>();
+                m_ConnectManager.AddAgent(gameObject, m_Actor.Affiliation);
+            }
             EnsureIsWithinLevelBounds();
 
             DetectionModule.HandleTargetDetection(m_Actor, m_SelfColliders);
